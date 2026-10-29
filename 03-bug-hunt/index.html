@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>03 · Bug Hunt</title>
+  <link rel="stylesheet" href="../assets/base.css" />
+</head>
+<body>
+  <main>
+    <h1>🐞 Bug Hunt: Report Card</h1>
+    <p class="subtitle">This page has 4 bugs. Find them using only the console and DevTools.</p>
+
+    <div class="card">
+      <h2>Ada's report card</h2>
+      <p>Scores: 80, 95, 72</p>
+      <button id="calculate-btn" class="btn">Calculate grade</button>
+      <p id="report" class="output">Click the button.</p>
+      <p><strong>Expected result:</strong> Ada: 82.3 (B)</p>
+    </div>
+
+    <div class="card">
+      <h2>How to hunt</h2>
+      <ol>
+        <li>Open the console. Red text = an error.</li>
+        <li>Read the <strong>first line</strong>: the error type and message.</li>
+        <li>Click the <strong>file:line</strong> link on the right to jump to the exact line.</li>
+        <li>Expand the error to read the <strong>call stack</strong>, bottom to top.</li>
+        <li>No error but wrong answer? Add a <code>console.log</code> or a breakpoint.</li>
+      </ol>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

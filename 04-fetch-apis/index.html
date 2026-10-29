@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>04 · Fetch & APIs</title>
+  <link rel="stylesheet" href="../assets/base.css" />
+</head>
+<body>
+  <main>
+    <h1>🌐 Talking to APIs</h1>
+    <p class="subtitle">fetch(), async / await, and API parameters.</p>
+
+    <!-- Part A: query parameters -->
+    <section class="card">
+      <h2>A · Weather (query parameters)</h2>
+      <div class="row">
+        <div>
+          <label for="lat">Latitude</label>
+          <input id="lat" type="text" value="40.71" />
+        </div>
+        <div>
+          <label for="lon">Longitude</label>
+          <input id="lon" type="text" value="-74.01" />
+        </div>
+        <div>
+          <label for="unit">Unit</label>
+          <select id="unit">
+            <option value="fahrenheit">°F</option>
+            <option value="celsius">°C</option>
+          </select>
+        </div>
+      </div>
+      <button id="weather-btn" class="btn">Get weather</button>
+      <p id="weather-output" class="output">Defaults to New York City.</p>
+    </section>
+
+    <!-- Part B: path parameters -->
+    <section class="card">
+      <h2>B · Dictionary (path parameter)</h2>
+      <div class="row">
+        <div>
+          <label for="word">Word</label>
+          <input id="word" type="text" value="magnolia" autocomplete="off" />
+        </div>
+      </div>
+      <button id="define-btn" class="btn">Define it</button>
+      <p id="define-output" class="output">Try a real word, then try a made-up one.</p>
+    </section>
+
+    <footer>
+      Weather data by <a href="https://open-meteo.com/">Open-Meteo.com</a> (CC BY 4.0).
+      Definitions from <a href="https://dictionaryapi.dev/">Free Dictionary API</a>.
+    </footer>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
