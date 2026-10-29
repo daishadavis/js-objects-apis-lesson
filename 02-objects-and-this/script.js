@@ -1,7 +1,5 @@
 // =============================================
-// 02 · Objects, Methods & `this`
-// An object is a backpack: it carries DATA (properties)
-// and TOOLS (methods) together, under one name.
+// 02 · Objects, Methods & `this` — SOLUTION
 // =============================================
 
 console.log("02 loaded ✅");
@@ -14,7 +12,6 @@ const game = {
 
   // ---- TOOLS (methods) ----
 
-  // Shows the word with ● for letters not guessed yet, e.g. "M●GN●●●A"
   showProgress: function () {
     const letters = this.word.toUpperCase().split("");
     const shown = [];
@@ -28,16 +25,11 @@ const game = {
     return shown.join("");
   },
 
-  // Returns true when every letter in the word has been guessed
+  // TODO 1
   isWon: function () {
-    // TODO 1: return true if showProgress() has NO "●" left in it.
-    // Hint: this.showProgress().includes("●") tells you if any are left.
-    // Remember: inside the object, call other methods with `this.`
-
+    return !this.showProgress().includes("●");
   },
 
-  // Checks the input. Returns an error message, or "" if it's fine.
-  // 👀 Nested if/else: read it like a flowchart, top to bottom.
   validate: function (input) {
     if (input === "") {
       return "Please enter a letter.";
@@ -45,15 +37,16 @@ const game = {
       if (input.length > 1) {
         return "Only one letter at a time.";
       } else {
-        // TODO 2: if input is NOT a letter A–Z, return "Letters only, please."
-        // Hint: /[a-zA-Z]/.test(input) is true for a letter.
-        // Otherwise, return "" (empty string = no problem).
-
+        // TODO 2
+        if (!/[a-zA-Z]/.test(input)) {
+          return "Letters only, please.";
+        } else {
+          return "";
+        }
       }
     }
   },
 
-  // The main move: try a letter and get back a message.
   makeGuess: function (input) {
     const problem = this.validate(input);
     if (problem !== "") {
@@ -68,16 +61,20 @@ const game = {
       this.guessedLetters.push(letter);
 
       if (this.word.toUpperCase().includes(letter)) {
-        // TODO 3: nested if/else
-        //   if the game is won → return "🎉 You got it! The word was ..." (use this.word)
-        //   else               → return `Good guess! ${letter} is in the word.`
-
+        // TODO 3
+        if (this.isWon()) {
+          return `🎉 You got it! The word was ${this.word.toUpperCase()}.`;
+        } else {
+          return `Good guess! ${letter} is in the word.`;
+        }
       } else {
         this.remainingGuesses = this.remainingGuesses - 1;
-        // TODO 4: nested if/else
-        //   if remainingGuesses is 0 → return "Game over. The word was ..."
-        //   else                     → return `Sorry, no ${letter}. ${this.remainingGuesses} guesses left.`
-
+        // TODO 4
+        if (this.remainingGuesses === 0) {
+          return `Game over. The word was ${this.word.toUpperCase()}.`;
+        } else {
+          return `Sorry, no ${letter}. ${this.remainingGuesses} guesses left.`;
+        }
       }
     }
   },
@@ -90,18 +87,11 @@ const game = {
   },
 };
 
-// ---------------------------------------------
-// INSIDE vs OUTSIDE the object
-// Rule of thumb:
-//   Inside the object's own methods → say `this` ("me, the object")
-//   Outside the object             → use its name: game.word, game.makeGuess("a")
-// ---------------------------------------------
-
-console.log(game.showProgress());   // outside → use the name
-console.log(game.makeGuess("a"));
+console.log(game.showProgress());   // "●●●●●●●●"
+console.log(game.makeGuess("a"));   // "Good guess! A is in the word."
 
 // ---------------------------------------------
-// Hook the object up to the page (DOM review!)
+// Hook the object up to the page
 // ---------------------------------------------
 
 const letterInput = document.querySelector("#letter");
@@ -122,34 +112,33 @@ guessBtn.addEventListener("click", function () {
   letterInput.focus();
 });
 
-// 🪤 TRAP: passing the method itself. Click Reset and read the console error.
-// Inside reset(), `this` is now the BUTTON, not the game!
-// TODO 5: fix it by wrapping the call in a function:
-//   resetBtn.addEventListener("click", function () { render(game.reset()); });
-resetBtn.addEventListener("click", game.reset);
+// TODO 5: wrap the call so `game` is the thing before the dot → `this` is the game
+resetBtn.addEventListener("click", function () {
+  render(game.reset());
+});
 
 render("Guess a letter to start.");
 
 
 // ---------------------------------------------
-// 🪤 MORE `this` TRAPS: uncomment one at a time, read the error, fix it.
+// `this` TRAPS — fixed
 // ---------------------------------------------
 
-// TRAP A: forgetting `this.` inside a method → ReferenceError
-// const counter = {
-//   count: 0,
-//   add: function () {
-//     count = count + 1;   // 🐞 which `count`?
-//     return count;
-//   },
-// };
-// console.log(counter.add());
+// TRAP A fixed: inside a method, reach the object's own data with `this.`
+const counter = {
+  count: 0,
+  add: function () {
+    this.count = this.count + 1;
+    return this.count;
+  },
+};
+console.log("counter.add():", counter.add()); // 1
 
-// TRAP B: arrow functions don't get their own `this`
-// const pet = {
-//   nickname: "Biscuit",
-//   speak: () => {
-//     return `${this.nickname} says woof`;   // 🐞 logs "undefined says woof"
-//   },
-// };
-// console.log(pet.speak());
+// TRAP B fixed: use a regular function (or method shorthand), not an arrow
+const pet = {
+  nickname: "Biscuit",
+  speak() {
+    return `${this.nickname} says woof`;
+  },
+};
+console.log(pet.speak()); // "Biscuit says woof"

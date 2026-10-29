@@ -1,39 +1,11 @@
 // =============================================
-// 04 · Talking to APIs
-// An API is a restaurant waiter:
-//   you (the browser) → place an order (a REQUEST, to a URL)
-//   the kitchen (a server) → cooks it
-//   the waiter → brings back your food (a RESPONSE, usually JSON)
-// You never go into the kitchen. You just need to know the menu
-// (the API's docs) and how to order (the URL + its parameters).
-//
-// 🛠️ Keep DevTools open on the NETWORK tab (filter: Fetch/XHR)
-// so you can watch every order go out and come back.
+// 04 · Talking to APIs — SOLUTION
 // =============================================
 
 console.log("04 loaded ✅");
 
-// ---------------------------------------------
-// WARM-UP: what does fetch() give you right away?
-// Paste this into the console and press Enter:
-//
-//   fetch("https://api.dictionaryapi.dev/api/v2/entries/en/hello")
-//
-// You get a Promise { <pending> }: an order ticket, not the food.
-// `await` means "wait at the counter until the order is ready".
-// `await` only works inside a function marked `async`.
-// ---------------------------------------------
-
-
 // =============================================
 // PART A · WEATHER: QUERY PARAMETERS
-// Query parameters are the options on your order, after the "?":
-//
-//   https://api.open-meteo.com/v1/forecast?latitude=40.71&longitude=-74.01
-//   └────────── base URL (endpoint) ─────┘ └──────── parameters ─────────┘
-//
-//   ?  starts the parameters     &  separates them     key=value  is one option
-// Docs (the menu): https://open-meteo.com/en/docs
 // =============================================
 
 const latInput = document.querySelector("#lat");
@@ -53,36 +25,34 @@ async function getWeather(latitude, longitude, unit) {
 
   console.log("Requesting:", url);
 
-  // STEP 2: TODO: Send the request and WAIT for the response.
-  // Hint: const response = await fetch(url);
+  // STEP 2: send the request and wait for the response
+  const response = await fetch(url);
 
+  // STEP 3: check the status code
+  if (!response.ok) {
+    throw new Error(`Weather request failed (${response.status})`);
+  }
 
-  // STEP 3: TODO: Check the response status. 200–299 means OK.
-  // If it's NOT ok, throw an error with the status code.
-  // Hint: if (!response.ok) { throw new Error(`Weather request failed (${response.status})`); }
+  // STEP 4: read the body as JSON and wait for it
+  const data = await response.json();
+  console.log(data);
 
-
-  // STEP 4: TODO: Turn the response body into a JS object and WAIT for it.
-  // Hint: const data = await response.json();
-  // Then console.log(data) and explore it in the console!
-
-
-  // STEP 5: TODO: RETURN just the part we need: data.current
-
+  // STEP 5: return just what we need
+  return data.current;
 }
 
 weatherBtn.addEventListener("click", async function () {
   weatherOutput.classList.remove("error");
   weatherOutput.textContent = "Loading…";
 
-  // try = "attempt this"   catch = "if anything throws, land here instead of crashing"
   try {
     const current = await getWeather(latInput.value, lonInput.value, unitSelect.value);
     const symbol = unitSelect.value === "fahrenheit" ? "°F" : "°C";
 
-    // TODO 6: Show the temperature and wind speed on the page.
-    // Hint: current.temperature_2m and current.wind_speed_10m
-    weatherOutput.textContent = "TODO: show the weather here";
+    // TODO 6
+    weatherOutput.textContent =
+      `🌡️ ${current.temperature_2m}${symbol}\n` +
+      `💨 Wind: ${current.wind_speed_10m} km/h`;
   } catch (error) {
     console.error(error);
     weatherOutput.classList.add("error");
@@ -90,18 +60,20 @@ weatherBtn.addEventListener("click", async function () {
   }
 });
 
-// 🧪 EXPERIMENTS (watch the Network tab each time):
-//   1. Change latitude/longitude to your hometown (search "latlong" for yours).
-//   2. Switch to °C. Which parameter changed in the URL?
-//   3. Type 999 as the latitude. What status code comes back? What does the response say?
+// UPGRADE (show after the basic version works):
+// URLSearchParams builds the "?a=1&b=2" part for you and handles special characters.
+//
+//   const params = new URLSearchParams({
+//     latitude: latitude,
+//     longitude: longitude,
+//     current: "temperature_2m,wind_speed_10m",
+//     temperature_unit: unit,
+//   });
+//   const url = `https://api.open-meteo.com/v1/forecast?${params}`;
 
 
 // =============================================
 // PART B · DICTIONARY: PATH PARAMETERS
-// Sometimes the "option" is part of the path itself, not after a ?:
-//
-//   https://api.dictionaryapi.dev/api/v2/entries/en/magnolia
-//                                                   └ word ┘
 // =============================================
 
 const wordInput = document.querySelector("#word");
@@ -109,18 +81,23 @@ const defineBtn = document.querySelector("#define-btn");
 const defineOutput = document.querySelector("#define-output");
 
 async function getDefinition(word) {
-  // TODO 7: Build the URL with the word at the end.
-  const url = "";
+  // TODO 7
+  const url = `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`;
 
-  // TODO 8: fetch it, check response.ok (throw `No definition found for "${word}"` if not),
-  // then parse the JSON. Same 3 steps as getWeather!
+  // TODO 8
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`No definition found for "${word}" (${response.status})`);
+  }
+  const data = await response.json();
+  console.log(data);
 
-
-  // The API returns an ARRAY of entries. Dig into the first one:
-  //   data[0].meanings[0].partOfSpeech              → "noun"
-  //   data[0].meanings[0].definitions[0].definition → "A tree..."
-  // TODO 9: return an object with both: { partOfSpeech: ..., definition: ... }
-
+  // TODO 9
+  const firstMeaning = data[0].meanings[0];
+  return {
+    partOfSpeech: firstMeaning.partOfSpeech,
+    definition: firstMeaning.definitions[0].definition,
+  };
 }
 
 defineBtn.addEventListener("click", async function () {
@@ -137,7 +114,8 @@ defineBtn.addEventListener("click", async function () {
   }
 });
 
-// 🧪 EXPERIMENTS:
-//   1. Try "javascript", "pizza", then a made-up word like "flurbo". What status code?
-//   2. In the Network tab, click a request → "Response" or "Preview" to see the raw JSON.
-//   3. Remove the `await` before fetch. What error do you get now, and why?
+// EXPERIMENT ANSWERS
+//   Made-up word ("flurbo") → 404 Not Found, so response.ok is false and we throw.
+//   Latitude 999            → 400 Bad Request; the Response tab explains why.
+//   Removing `await`        → response is a Promise, not a Response, so
+//                             response.ok is undefined and the check throws.

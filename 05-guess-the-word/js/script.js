@@ -1,139 +1,208 @@
 // =============================================
-// 05 · Guess the Word
-// We build this one TOGETHER. Plan first, then code one step at a time.
-// After every step: save, refresh, and check the console.
+// 05 · Guess the Word — SOLUTION
 // =============================================
 
 // ---------------------------------------------
-// THE PLAN (in plain English)
-//   1. Grab the elements we need from index.html
-//   2. Store the game's data: the word, the letters guessed, the guesses left
-//   3. getWord: fetch the word list (an API!) and pick a random word
-//   4. placeholder: show the word as ● dots
-//   5. Guess button click → read the letter → validateInput → makeGuess
-//   6. makeGuess: skip repeats, remember new letters
-//   7. showGuessedLetters: list them on the page
-//   8. updateWordInProgress: swap ● for correct letters
-//   9. updateGuessesRemaining: lose a guess on a miss; 0 = game over
-//  10. checkIfWin: does the word in progress match the word?
-//  11. startOver + Play Again: reset the data and the page
+// STEP 1 · Select the elements
 // ---------------------------------------------
-
-
-// ---------------------------------------------
-// STEP 1 · Select the elements (DOM review!)
-// Look at index.html and find each class or id:
-//   .guessed-letters   .guess   #letter   .word-in-progress
-//   .remaining   .remaining span   .message   .play-again
-// ---------------------------------------------
-
-
+const guessedLettersElement = document.querySelector(".guessed-letters");
+const guessButton = document.querySelector(".guess");
+const letterInput = document.querySelector("#letter");
+const wordInProgress = document.querySelector(".word-in-progress");
+const remainingElement = document.querySelector(".remaining");
+const remainingSpan = document.querySelector(".remaining span");
+const message = document.querySelector(".message");
+const playAgainButton = document.querySelector(".play-again");
 
 // ---------------------------------------------
 // STEP 2 · Game data
-// let word = "magnolia";          (a starter word until the API works)
-// let guessedLetters = [];
-// let remainingGuesses = 8;
 // ---------------------------------------------
-
-
+let word = "magnolia";
+let guessedLetters = [];
+let remainingGuesses = 8;
 
 // ---------------------------------------------
-// STEP 3 · getWord (async + fetch + await)
-// The word list is a plain text file with one word per line:
-// https://gist.githubusercontent.com/skillcrush-curriculum/7061f1d4d3d5bfe47efbfbcfe42bf57e/raw/5ffc447694486e7dea686f34a6c085ae371b43fe/words.txt
-//   - fetch it and check response.ok
-//   - it's TEXT, not JSON: use await response.text()
-//   - split it into an array by line: .split("\n")
-//   - pick a random one and .trim() it
-//   - then call placeholder(word)
+// STEP 3 · getWord
 // ---------------------------------------------
+const WORDS_URL =
+  "https://gist.githubusercontent.com/skillcrush-curriculum/7061f1d4d3d5bfe47efbfbcfe42bf57e/raw/5ffc447694486e7dea686f34a6c085ae371b43fe/words.txt";
 
-
+const getWord = async function () {
+  try {
+    const response = await fetch(WORDS_URL);
+    if (!response.ok) {
+      throw new Error(`Word list request failed (${response.status})`);
+    }
+    const words = await response.text();
+    // one word per line; skip any blank lines
+    const wordArray = words.split("\n").filter((line) => line.trim() !== "");
+    const randomIndex = Math.floor(Math.random() * wordArray.length);
+    word = wordArray[randomIndex].trim();
+  } catch (error) {
+    // If the API is down, keep the starter word so the game still works.
+    console.error(error);
+  }
+  placeholder(word);
+};
 
 // ---------------------------------------------
-// STEP 4 · placeholder(word)
-// One ● for each letter, shown in .word-in-progress
+// STEP 4 · placeholder
 // ---------------------------------------------
+const placeholder = function (word) {
+  const dots = [];
+  for (const letter of word) {
+    dots.push("●");
+  }
+  wordInProgress.textContent = dots.join("");
+};
 
-
+// Start the game
+getWord();
 
 // ---------------------------------------------
 // STEP 5 · The Guess button
-// The button is inside a <form>, so clicking it reloads the page.
-// Remember event.preventDefault()!
-//   - clear the message
-//   - read the input's value
-//   - validateInput(guess); if it's good, makeGuess(guess)
-//   - empty the input
 // ---------------------------------------------
+guessButton.addEventListener("click", function (event) {
+  event.preventDefault();
+  message.textContent = "";
 
+  const guess = letterInput.value;
+  const goodGuess = validateInput(guess);
 
-
-// ---------------------------------------------
-// STEP 6 · validateInput(input)  ← nested if/else
-//   empty?            → message: "Please enter a letter."
-//   more than one?    → message: "Please enter a single letter."
-//   not A–Z?          → message: "Please enter a letter from A to Z."
-//   otherwise         → return input
-// Hint: const acceptedLetter = /[a-zA-Z]/;  and  input.match(acceptedLetter)
-// ---------------------------------------------
-
-
+  if (goodGuess) {
+    makeGuess(guess);
+  }
+  letterInput.value = "";
+});
 
 // ---------------------------------------------
-// STEP 7 · makeGuess(guess)
-//   - uppercase it
-//   - already in guessedLetters? → message, and stop
-//   - otherwise push it, then call:
-//       showGuessedLetters()
-//       updateGuessesRemaining(guess)
-//       updateWordInProgress(guessedLetters)
+// STEP 6 · validateInput
 // ---------------------------------------------
-
-
-
-// ---------------------------------------------
-// STEP 8 · showGuessedLetters()
-// Empty the <ul>, then add one <li> per guessed letter.
-// (Same createElement + appendChild moves as the to-do app!)
-// ---------------------------------------------
-
-
+const validateInput = function (input) {
+  const acceptedLetter = /[a-zA-Z]/;
+  if (input.length === 0) {
+    message.textContent = "Please enter a letter.";
+  } else if (input.length > 1) {
+    message.textContent = "Please enter a single letter.";
+  } else if (!input.match(acceptedLetter)) {
+    message.textContent = "Please enter a letter from A to Z.";
+  } else {
+    return input;
+  }
+};
 
 // ---------------------------------------------
-// STEP 9 · updateWordInProgress(guessedLetters)
-// For each letter in the word: guessed? show it : show ●
-// Then call checkIfWin()
+// STEP 7 · makeGuess
 // ---------------------------------------------
-
-
-
-// ---------------------------------------------
-// STEP 10 · updateGuessesRemaining(guess)  ← nested if/else again
-//   not in the word → "Sorry, the word has no X." and subtract 1
-//   in the word     → "Good guess! The word has the letter X."
-//   then: 0 left → "Game over!" + reveal the word + startOver()
-//         1 left → span says "one guess"
-//         else   → span says "N guesses"
-// ---------------------------------------------
-
-
+const makeGuess = function (guess) {
+  guess = guess.toUpperCase();
+  if (guessedLetters.includes(guess)) {
+    message.textContent = "You already guessed that letter. Try again.";
+  } else {
+    guessedLetters.push(guess);
+    showGuessedLetters();
+    updateGuessesRemaining(guess);
+    updateWordInProgress(guessedLetters);
+  }
+};
 
 // ---------------------------------------------
-// STEP 11 · checkIfWin()
-// If the word in progress === the word (uppercase):
-//   - add the class "win" to the message
-//   - message: <p class="highlight">You guessed the correct word! Congrats!</p>
-//   - startOver()
+// STEP 8 · showGuessedLetters
 // ---------------------------------------------
+const showGuessedLetters = function () {
+  guessedLettersElement.innerHTML = "";
+  for (const letter of guessedLetters) {
+    const li = document.createElement("li");
+    li.textContent = letter;
+    guessedLettersElement.appendChild(li);
+  }
+};
 
+// ---------------------------------------------
+// STEP 9 · updateWordInProgress
+// ---------------------------------------------
+const updateWordInProgress = function (guessedLetters) {
+  const wordUpper = word.toUpperCase();
+  const revealWord = [];
+  for (const letter of wordUpper) {
+    if (guessedLetters.includes(letter)) {
+      revealWord.push(letter);
+    } else {
+      revealWord.push("●");
+    }
+  }
+  wordInProgress.textContent = revealWord.join("");
+  checkIfWin();
+};
+
+// ---------------------------------------------
+// STEP 10 · updateGuessesRemaining
+// ---------------------------------------------
+const updateGuessesRemaining = function (guess) {
+  const upperWord = word.toUpperCase();
+  if (!upperWord.includes(guess)) {
+    message.textContent = `Sorry, the word has no ${guess}.`;
+    remainingGuesses -= 1;
+  } else {
+    message.textContent = `Good guess! The word has the letter ${guess}.`;
+  }
+
+  if (remainingGuesses === 0) {
+    message.innerHTML = `Game over! The word was <span class="highlight">${word}</span>.`;
+    startOver();
+  } else if (remainingGuesses === 1) {
+    remainingSpan.textContent = "one guess";
+  } else {
+    remainingSpan.textContent = `${remainingGuesses} guesses`;
+  }
+};
+
+// ---------------------------------------------
+// STEP 11 · checkIfWin
+// ---------------------------------------------
+const checkIfWin = function () {
+  if (word.toUpperCase() === wordInProgress.textContent) {
+    message.classList.add("win");
+    message.innerHTML = `<p class="highlight">You guessed the correct word! Congrats!</p>`;
+    startOver();
+  }
+};
+
+// ---------------------------------------------
+// STEP 12 · startOver and Play Again
+// ---------------------------------------------
+const startOver = function () {
+  guessButton.classList.add("hide");
+  remainingElement.classList.add("hide");
+  guessedLettersElement.classList.add("hide");
+  playAgainButton.classList.remove("hide");
+};
+
+playAgainButton.addEventListener("click", function () {
+  // reset the data
+  guessedLetters = [];
+  remainingGuesses = 8;
+
+  // reset the page
+  message.classList.remove("win");
+  message.textContent = "";
+  guessedLettersElement.innerHTML = "";
+  remainingSpan.textContent = `${remainingGuesses} guesses`;
+
+  getWord();
+
+  guessButton.classList.remove("hide");
+  remainingElement.classList.remove("hide");
+  guessedLettersElement.classList.remove("hide");
+  playAgainButton.classList.add("hide");
+});
 
 
 // ---------------------------------------------
-// STEP 12 · startOver() and the Play Again button
-// startOver: hide the Guess button, remaining text and guessed letters;
-//            show the Play Again button. (classList "hide")
-// Play Again click: reset the data, clear the page, getWord(),
-//                   and flip the hide classes back.
+// STRETCH GOAL · Hint button (homework)
+// Add <button class="hint">Hint</button> to index.html, then:
+//   - fetch https://api.dictionaryapi.dev/api/v2/entries/en/${word}
+//   - show data[0].meanings[0].definitions[0].definition in the message
+//   - handle a 404 (some words have no definition)
+//   - optional: a hint costs one guess!
 // ---------------------------------------------
